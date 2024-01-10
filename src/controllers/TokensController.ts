@@ -10,9 +10,10 @@ import { BadRequest } from '../exceptions/BadRequest';
 import { IUser } from '../models/IUser';
 import { ENCRYPT_SALT, JWT_ACCESS_TOKEN, JWT_REFRESH_TOKEN } from '../config';
 import { ServerError } from '../exceptions/ServerError';
+import { ILoginDataDto } from '../dtos/ILoginDataDto';
 
 export class TokenController extends AbstractBaseController {
-    public static async createTokensPair(request: express.Request<{}, {}, IUserDto>, response: express.Response, next: express.NextFunction) {
+    public async createTokensPair(request: express.Request<{}, {}, ILoginDataDto>, response: express.Response, next: express.NextFunction) {
         try {
             if (this.idSequence === -1) {
                 this.initializeIdSequence<IJwtRecord>('/tokens');
@@ -24,20 +25,26 @@ export class TokenController extends AbstractBaseController {
                 throw new BadRequest('Пользователь с таким логином не существует');
             }
 
-            if (users[0].hashPassword !== encrypt.SHA256(users[0].hashPassword, { salt: ENCRYPT_SALT }).toString()) {
+            const user = users[0];
+            if (users[0].hashPassword !== encrypt.SHA256(request.body.password, { salt: ENCRYPT_SALT }).toString()) {
                 throw new BadRequest('Введен некоректный пароль');
             }
 
-            const user = users[0];
             const acessToken = jsonwebtoken.sign({ id: user.id }, JWT_ACCESS_TOKEN, { expiresIn: '15m' });
             const refreshToken = jsonwebtoken.sign({ id: user.id }, JWT_REFRESH_TOKEN, { expiresIn: '30d' });
 
+            console.log(JSON.stringify({ id: this.idSequence++, refreshToken: refreshToken, userId: user.id } as IJwtRecord));
+
             const dbResponse = await DB_API.post(
-                '/tokens', {
+                '/tokens', undefined, {
                     body: JSON.stringify({ id: this.idSequence++, refreshToken: refreshToken, userId: user.id } as IJwtRecord) 
                 });
 
+            console.log(dbResponse);
+
             if (dbResponse.status === 201) {
+                console.log('successful');
+                
                 return response
                     .status(200)
                     .cookie(
@@ -48,7 +55,7 @@ export class TokenController extends AbstractBaseController {
                         'accessToken',
                         JSON.stringify({ refreshToken: acessToken }),
                         { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true }                        
-                    );
+                    ).json();
             }
 
             throw new ServerError('Server error');

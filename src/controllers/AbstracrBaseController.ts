@@ -5,9 +5,9 @@ export interface IInitializationType {
 }
 
 export class AbstractBaseController {
-    protected static idSequence = -1;
+    protected idSequence = -1;
 
-    protected static async initializeIdSequence<T extends IInitializationType>(path: string) {
+    protected async initializeIdSequence<T extends IInitializationType>(path: string) {
         const entity = (await (await DB_API.get(path)).json()) as T[];
 
         if (entity.length === 0) {

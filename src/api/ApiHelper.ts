@@ -9,6 +9,8 @@ export class APIService {
     }
 
     public async post(path: string, queryParams?: Record<string, string>, options?: IHttpRequestOptions): Promise<Response> {
+        console.log(options);
+
         return await this.makeRequest(path, 'POST', queryParams, options);
     }
 
@@ -27,6 +29,8 @@ export class APIService {
         options?: IHttpRequestOptions
     ): Promise<Response> {
         const url = `${this.API_ROOT_URL}${path}${queryParams === undefined ? '' : '?' + this.resolveQueryParams(queryParams)}`; 
+
+        console.log('body', options?.body);
 
         const response: Response = await fetch(url, {
             method: method,

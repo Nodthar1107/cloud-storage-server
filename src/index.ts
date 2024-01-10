@@ -4,9 +4,13 @@ import * as cookieParser from 'cookie-parser';
 
 import { UserController } from './controllers/UserController';
 import { errorMiddleware } from './middlewares/errorMiddleware';
+import { TokenController } from './controllers/TokensController';
 
 const app = express();
 const router = express.Router();
+const tokenController = new TokenController();
+const userController = new UserController();
+
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
 app.use(bodyParser.json());
@@ -24,8 +28,11 @@ router.get('/', (_: express.Request, response: express.Response) => {
 });
 
 router.post('/create', (request: express.Request, response: express.Response, next: express.NextFunction) => {
-  console.log("Post");
-  return UserController.create(request, response, next);
+  return userController.create(request, response, next);
+});
+
+router.post('/auth/login', (request: express.Request, response: express.Response, next: express.NextFunction) => {
+  return tokenController.createTokensPair(request, response, next);
 })
 
 app.listen(5000, () => {

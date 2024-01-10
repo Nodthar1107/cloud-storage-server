@@ -12,7 +12,7 @@ import { AbstractBaseController } from './AbstracrBaseController';
 
 
 export class UserController extends AbstractBaseController {
-    public static async create(request: express.Request<{}, {}, IUserCandidateDto>, response: express.Response, next: express.NextFunction) {
+    public async create(request: express.Request<{}, {}, IUserCandidateDto>, response: express.Response, next: express.NextFunction) {
         if (this.idSequence === -1) {
             await this.initializeIdSequence<IUser>('/users');
         }
